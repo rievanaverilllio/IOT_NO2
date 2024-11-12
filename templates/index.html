@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #e9f1f7;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #0066cc;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .dashboard-header h1 {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .button {
+            padding: 10px 15px;
+            background-color: #005bb5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background-color: #004a99;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+            flex: 1;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card h2 {
+            font-size: 40px;
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .form-section, .data-list-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .data-list {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .data-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            font-size: 16px;
+        }
+
+        .data-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>Weather Dashboard</h1>
+        <button class="button" onclick="toggleForm()">Tambah Data</button>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <h2 id="suhumax">0°C</h2>
+            <p>Suhu Maksimum</p>
+        </div>
+        <div class="card">
+            <h2 id="suhumin">0°C</h2>
+            <p>Suhu Minimum</p>
+        </div>
+        <div class="card">
+            <h2 id="suhurata">0°C</h2>
+            <p>Suhu Rata-Rata</p>
+        </div>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <h2 id="month_year_oldest">-</h2>
+            <p>Rekor Tertua (Bulan-Tahun)</p>
+        </div>
+        <div class="card">
+            <h2 id="month_year_latest">-</h2>
+            <p>Rekor Terbaru (Bulan-Tahun)</p>
+        </div>
+    </div>
+
+    <div class="form-section" id="formSection">
+        <h2>Tambah Data Cuaca</h2>
+        <form id="dataForm">
+            <div class="form-group">
+                <label for="suhu">Suhu (°C):</label>
+                <input type="number" id="suhu" name="suhu" required>
+            </div>
+            <div class="form-group">
+                <label for="humid">Kelembaban (%):</label>
+                <input type="number" id="humid" name="humid" required>
+            </div>
+            <div class="form-group">
+                <label for="kecerahan">Kecerahan (%):</label>
+                <input type="number" id="kecerahan" name="kecerahan" required>
+            </div>
+            <div class="form-group">
+                <label for="timestamp">Waktu:</label>
+                <input type="datetime-local" id="timestamp" name="timestamp" required>
+            </div>
+            <button type="button" class="button" onclick="addData()">Kirim</button>
+        </form>
+    </div>
+
+    <div class="data-list-section">
+        <h2>Data Masukan</h2>
+        <div class="data-list" id="dataList"></div>
+    </div>
+</div>
+
+<script>
+    // Toggle form visibility
+    function toggleForm() {
+        const formSection = document.getElementById("formSection");
+        formSection.style.display = formSection.style.display === "none" ? "block" : "none";
+    }
+
+    // Load data and populate fields when the page loads
+    window.onload = loadData;
+
+    async function loadData() {
+        try {
+            const response = await fetch('/data');
+            const data = await response.json();
+
+            document.getElementById('suhumax').innerText = `${data.suhumax}°C`;
+            document.getElementById('suhumin').innerText = `${data.suhumin}°C`;
+            document.getElementById('suhurata').innerText = `${data.suhurata.toFixed(2)}°C`;
+            document.getElementById('month_year_oldest').innerText = data.month_year_max[0].month_year || "-";
+            document.getElementById('month_year_latest').innerText = data.month_year_max[1].month_year || "-";
+
+            const dataList = document.getElementById('dataList');
+            dataList.innerHTML = '';
+            data.nilai_suhu_max_humid_max.forEach(entry => {
+                const item = document.createElement('div');
+                item.className = 'data-item';
+                item.innerText = `ID: ${entry.idx} | Temp: ${entry.suhu}°C | Humidity: ${entry.humid}% | Brightness: ${entry.kecerahan}% | Time: ${entry.timestamp}`;
+                dataList.appendChild(item);
+            });
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    }
+
+    async function addData() {
+        const suhu = document.getElementById('suhu').value;
+        const humid = document.getElementById('humid').value;
+        const kecerahan = document.getElementById('kecerahan').value;
+        const timestamp = document.getElementById('timestamp').value;
+
+        if (!suhu || !humid || !kecerahan || !timestamp) {
+            alert("Mohon isi semua kolom.");
+            return;
+        }
+
+        const newData = {
+            nilai_suhu_max_humid_max: [
+                {
+                    idx: Date.now(),
+                    suhu: parseFloat(suhu),
+                    humid: parseFloat(humid),
+                    kecerahan: parseFloat(kecerahan),
+                    timestamp: timestamp.replace("T", " ")
+                }
+            ]
+        };
+
+        try {
+            const response = await fetch('/data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newData)
+            });
+
+            if (response.ok) {
+                alert("Data berhasil ditambahkan!");
+                loadData();
+                document.getElementById("dataForm").reset();
+                toggleForm();
+            } else {
+                const result = await response.json();
+                alert(`Error: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error adding data:', error);
+        }
+    }
+</script>
+
+</body>
+</html>
